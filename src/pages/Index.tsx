@@ -7,6 +7,9 @@ import SectorAnalysis from '@/components/dashboard/SectorAnalysis';
 import TopStocks from '@/components/dashboard/TopStocks';
 import NewsImpact from '@/components/dashboard/NewsImpact';
 import NewsletterForm from '@/components/dashboard/NewsletterForm';
+import MarketBreadth from '@/components/dashboard/MarketBreadth';
+import TechnicalIndicators from '@/components/dashboard/TechnicalIndicators';
+import GlobalMarkets from '@/components/dashboard/GlobalMarkets';
 import { sentimentService, SentimentData } from '@/services/sentimentService';
 import { formatDate } from '@/utils/formatters';
 
@@ -51,6 +54,16 @@ const Index = () => {
             )}
           </p>
         </div>
+        {data && (
+          <div className="flex items-center space-x-2">
+            <div className="text-xl font-medium">{data.marketIndex}</div>
+            <div className={`px-2 py-1 rounded-md text-white ${
+              data.percentChange >= 0 ? 'bg-green-500' : 'bg-red-500'
+            }`}>
+              {data.percentChange >= 0 ? '+' : ''}{data.percentChange.toFixed(2)}%
+            </div>
+          </div>
+        )}
       </div>
       
       {/* Overview Cards */}
@@ -70,6 +83,29 @@ const Index = () => {
             )}
           </div>
         </div>
+      </div>
+      
+      {/* Technical Analysis Section */}
+      <div className="mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {data && (
+            <>
+              <MarketBreadth data={data.marketBreadth} loading={loading} />
+              <TechnicalIndicators 
+                data={data.technicalIndicators} 
+                currentValue={data.currentValue}
+                loading={loading} 
+              />
+            </>
+          )}
+        </div>
+      </div>
+      
+      {/* Global Markets Section */}
+      <div className="mt-8">
+        {data && (
+          <GlobalMarkets markets={data.globalMarkets} loading={loading} />
+        )}
       </div>
       
       {/* Stock and News */}

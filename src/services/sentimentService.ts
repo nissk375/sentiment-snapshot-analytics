@@ -14,6 +14,10 @@ export interface SentimentData {
   topStocks: StockSentiment[];
   recentNews: NewsItem[];
   sentimentTrend: TrendPoint[];
+  volatilityIndex: number;
+  marketBreadth: MarketBreadth;
+  technicalIndicators: TechnicalIndicators;
+  globalMarkets: GlobalMarket[];
 }
 
 export interface SectorSentiment {
@@ -48,16 +52,215 @@ export interface TrendPoint {
   indexValue: number;
 }
 
-// Mock data generator to simulate real-time data
-const generateMockData = (): SentimentData => {
+export interface MarketBreadth {
+  advancers: number;
+  decliners: number;
+  unchanged: number;
+  newHighs: number;
+  newLows: number;
+}
+
+export interface TechnicalIndicators {
+  rsi: number;
+  macd: number;
+  movingAverages: {
+    ma50: number;
+    ma200: number;
+  };
+  bollingerBands: {
+    upper: number;
+    middle: number;
+    lower: number;
+  };
+}
+
+export interface GlobalMarket {
+  name: string;
+  index: string;
+  value: number;
+  percentChange: number;
+}
+
+// API service for fetching real financial data
+class FinancialAPIService {
+  private API_KEY = "demo"; // Using demo key for Alpha Vantage API
+  private BASE_URL = "https://www.alphavantage.co/query";
+
+  async fetchGlobalQuote(symbol: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.BASE_URL}?function=GLOBAL_QUOTE&symbol=${symbol}&apikey=${this.API_KEY}`);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching global quote:", error);
+      return null;
+    }
+  }
+
+  async fetchSectorPerformance(): Promise<any> {
+    try {
+      const response = await fetch(`${this.BASE_URL}?function=SECTOR&apikey=${this.API_KEY}`);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching sector performance:", error);
+      return null;
+    }
+  }
+
+  async fetchTimeSeriesIntraday(symbol: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.BASE_URL}?function=TIME_SERIES_INTRADAY&symbol=${symbol}&interval=5min&apikey=${this.API_KEY}`);
+      if (!response.ok) {
+        throw new Error(`API error: ${response.status}`);
+      }
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Error fetching time series data:", error);
+      return null;
+    }
+  }
+}
+
+// Generate mock data with some real data integrated
+const generateMockData = async (): Promise<SentimentData> => {
   const now = new Date();
-  const overallSentiment = parseFloat((Math.random() * 2 - 1).toFixed(2));
-  const currentValue = parseFloat((26000 + Math.random() * 2000).toFixed(2));
-  const previousClose = parseFloat((currentValue * (1 - (Math.random() * 0.1 - 0.05))).toFixed(2));
-  const percentChange = parseFloat(((currentValue - previousClose) / previousClose * 100).toFixed(2));
+  const api = new FinancialAPIService();
+  let realSPYData = null;
+  let realSectorData = null;
+  let realTimeSeriesData = null;
+
+  try {
+    // Attempt to fetch real data
+    realSPYData = await api.fetchGlobalQuote("SPY");
+    realSectorData = await api.fetchSectorPerformance();
+    realTimeSeriesData = await api.fetchTimeSeriesIntraday("SPY");
+    
+    if (realSPYData || realSectorData || realTimeSeriesData) {
+      console.log("Successfully integrated some real financial data");
+    }
+  } catch (error) {
+    console.error("Error fetching real financial data:", error);
+  }
+
+  // Generate overall sentiment, slightly influenced by real data if available
+  let currentValue, previousClose, percentChange;
+  
+  if (realSPYData && realSPYData["Global Quote"]) {
+    const quote = realSPYData["Global Quote"];
+    currentValue = parseFloat(quote["05. price"]) || 0;
+    previousClose = parseFloat(quote["08. previous close"]) || 0;
+    percentChange = parseFloat(quote["10. change percent"].replace("%", "")) || 0;
+  } else {
+    currentValue = parseFloat((26000 + Math.random() * 2000).toFixed(2));
+    previousClose = parseFloat((currentValue * (1 - (Math.random() * 0.1 - 0.05))).toFixed(2));
+    percentChange = parseFloat(((currentValue - previousClose) / previousClose * 100).toFixed(2));
+  }
+
+  // Calculate sentiment based on real/simulated market data
+  const overallSentiment = Math.min(Math.max(percentChange / 5, -1), 1); // Scale to -1 to 1
   
   // Create time points for the past 24 hours (hourly)
-  const trendPoints = Array.from({ length: 24 }, (_, i) => {
+  const trendPoints = await createTrendPoints(realTimeSeriesData, now);
+  
+  // Generate sector sentiments, using real data if available
+  const sectors = generateSectorData(realSectorData);
+  
+  // Generate top stocks data
+  const topStocks = generateStockData(percentChange);
+  
+  // Generate news data
+  const recentNews = generateNewsData(now);
+
+  // Generate market breadth data
+  const marketBreadth = {
+    advancers: Math.floor(Math.random() * 300) + 200,
+    decliners: Math.floor(Math.random() * 200) + 100,
+    unchanged: Math.floor(Math.random() * 50) + 20,
+    newHighs: Math.floor(Math.random() * 30) + 5,
+    newLows: Math.floor(Math.random() * 15) + 3
+  };
+
+  // Generate technical indicators data
+  const technicalIndicators = {
+    rsi: parseFloat((Math.random() * 60 + 20).toFixed(2)),
+    macd: parseFloat((Math.random() * 2 - 1).toFixed(3)),
+    movingAverages: {
+      ma50: currentValue * (1 + Math.random() * 0.05 - 0.025),
+      ma200: currentValue * (1 + Math.random() * 0.1 - 0.05)
+    },
+    bollingerBands: {
+      upper: currentValue * 1.05,
+      middle: currentValue,
+      lower: currentValue * 0.95
+    }
+  };
+
+  // Generate global markets data
+  const globalMarkets = [
+    { name: "US", index: "S&P 500", value: currentValue, percentChange },
+    { name: "Japan", index: "Nikkei 225", value: parseFloat((28000 + Math.random() * 2000).toFixed(2)), percentChange: parseFloat((Math.random() * 6 - 3).toFixed(2)) },
+    { name: "UK", index: "FTSE 100", value: parseFloat((7000 + Math.random() * 500).toFixed(2)), percentChange: parseFloat((Math.random() * 4 - 2).toFixed(2)) },
+    { name: "Germany", index: "DAX", value: parseFloat((15000 + Math.random() * 1000).toFixed(2)), percentChange: parseFloat((Math.random() * 5 - 2.5).toFixed(2)) },
+    { name: "China", index: "Shanghai", value: parseFloat((3300 + Math.random() * 300).toFixed(2)), percentChange: parseFloat((Math.random() * 4 - 2).toFixed(2)) }
+  ];
+
+  return {
+    timestamp: now.toISOString(),
+    overallSentiment,
+    marketIndex: "S&P 500",
+    currentValue,
+    previousClose,
+    percentChange,
+    volume: Math.floor(Math.random() * 1000000000) + 500000000,
+    sectors,
+    topStocks,
+    recentNews,
+    sentimentTrend: trendPoints,
+    volatilityIndex: parseFloat((Math.random() * 10 + 15).toFixed(2)),
+    marketBreadth,
+    technicalIndicators,
+    globalMarkets
+  };
+};
+
+// Helper function to create trend points, integrating real data when available
+const createTrendPoints = async (realTimeSeriesData: any, now: Date): Promise<TrendPoint[]> => {
+  if (realTimeSeriesData && realTimeSeriesData["Time Series (5min)"]) {
+    try {
+      const timeSeriesData = realTimeSeriesData["Time Series (5min)"];
+      const timestamps = Object.keys(timeSeriesData).sort((a, b) => new Date(b).getTime() - new Date(a).getTime());
+      
+      // Take latest 24 data points (approx. 2 hours of 5-min data)
+      const points = timestamps.slice(0, 24).map(timestamp => {
+        const entry = timeSeriesData[timestamp];
+        const indexValue = parseFloat(entry["4. close"]);
+        // Calculate a sentiment value based on price movement
+        const open = parseFloat(entry["1. open"]);
+        const sentiment = ((indexValue - open) / open) * 5; // Scale to approximately -1 to 1
+        
+        return {
+          timestamp,
+          sentiment: Math.min(Math.max(sentiment, -1), 1),
+          indexValue
+        };
+      });
+      
+      return points;
+    } catch (error) {
+      console.error("Error processing time series data:", error);
+    }
+  }
+  
+  // Fallback to generated data
+  return Array.from({ length: 24 }, (_, i) => {
     const trendTime = new Date(now);
     trendTime.setHours(now.getHours() - 23 + i);
     return {
@@ -66,20 +269,47 @@ const generateMockData = (): SentimentData => {
       indexValue: parseFloat((25000 + Math.random() * 3000).toFixed(2))
     };
   });
-  
-  // Generate sector sentiments
-  const sectors = [
+};
+
+// Helper function to generate sector data
+const generateSectorData = (realSectorData: any): SectorSentiment[] => {
+  const sectorNames = [
     "Technology", "Healthcare", "Financials", 
     "Consumer Discretionary", "Communication Services",
     "Industrials", "Energy", "Utilities", "Materials", "Real Estate"
-  ].map(name => ({
+  ];
+  
+  if (realSectorData && realSectorData["Rank A: Real-Time Performance"]) {
+    try {
+      return Object.entries(realSectorData["Rank A: Real-Time Performance"])
+        .filter(([key]) => key !== "Information Technology")
+        .map(([name, changeStr]) => {
+          const percentChange = parseFloat(changeStr.toString().replace("%", ""));
+          const sentiment = percentChange / 5; // Scale to approximately -1 to 1 range
+          
+          return {
+            name,
+            sentiment: Math.min(Math.max(sentiment, -1), 1),
+            percentChange,
+            volume: Math.floor(Math.random() * 10000000) + 500000
+          };
+        });
+    } catch (error) {
+      console.error("Error processing sector data:", error);
+    }
+  }
+  
+  // Fallback to generated data
+  return sectorNames.map(name => ({
     name,
     sentiment: parseFloat((Math.random() * 2 - 1).toFixed(2)),
     percentChange: parseFloat((Math.random() * 10 - 5).toFixed(2)),
     volume: Math.floor(Math.random() * 10000000) + 500000
   }));
-  
-  // Generate top stocks
+};
+
+// Helper function to generate stock data
+const generateStockData = (marketPercentChange: number): StockSentiment[] => {
   const stockNames = [
     { symbol: "AAPL", name: "Apple Inc." },
     { symbol: "MSFT", name: "Microsoft Corporation" },
@@ -93,16 +323,25 @@ const generateMockData = (): SentimentData => {
     { symbol: "JNJ", name: "Johnson & Johnson" }
   ];
   
-  const topStocks = stockNames.map(stock => ({
-    symbol: stock.symbol,
-    name: stock.name,
-    sentiment: parseFloat((Math.random() * 2 - 1).toFixed(2)),
-    price: parseFloat((100 + Math.random() * 900).toFixed(2)),
-    percentChange: parseFloat((Math.random() * 10 - 5).toFixed(2)),
-    volume: Math.floor(Math.random() * 5000000) + 100000
-  }));
-  
-  // Generate news
+  // Generate stock data with some correlation to overall market
+  return stockNames.map(stock => {
+    const baseChange = marketPercentChange * (0.5 + Math.random());
+    const deviation = (Math.random() * 6) - 3; // Random component
+    const percentChange = parseFloat((baseChange + deviation).toFixed(2));
+    
+    return {
+      symbol: stock.symbol,
+      name: stock.name,
+      sentiment: Math.min(Math.max(percentChange / 10, -1), 1), // Scale to -1 to 1
+      price: parseFloat((100 + Math.random() * 900).toFixed(2)),
+      percentChange,
+      volume: Math.floor(Math.random() * 5000000) + 100000
+    };
+  });
+};
+
+// Helper function to generate news data
+const generateNewsData = (now: Date): NewsItem[] => {
   const newsTitles = [
     "Federal Reserve Signals Interest Rate Decision",
     "Major Tech Companies Report Quarterly Earnings",
@@ -118,7 +357,7 @@ const generateMockData = (): SentimentData => {
   
   const newsSources = ["Bloomberg", "Reuters", "CNBC", "Financial Times", "Wall Street Journal"];
   
-  const recentNews = newsTitles.map((title, idx) => ({
+  return newsTitles.map((title, idx) => ({
     id: `news-${idx}`,
     title,
     source: newsSources[Math.floor(Math.random() * newsSources.length)],
@@ -127,20 +366,6 @@ const generateMockData = (): SentimentData => {
     sentiment: parseFloat((Math.random() * 2 - 1).toFixed(2)),
     impactScore: parseFloat((Math.random()).toFixed(2))
   }));
-  
-  return {
-    timestamp: now.toISOString(),
-    overallSentiment,
-    marketIndex: "S&P 500",
-    currentValue,
-    previousClose,
-    percentChange,
-    volume: Math.floor(Math.random() * 1000000000) + 500000000,
-    sectors,
-    topStocks,
-    recentNews,
-    sentimentTrend: trendPoints
-  };
 };
 
 // Interval reference for real-time updates
@@ -153,10 +378,12 @@ class SentimentService {
 
   constructor() {
     // Initialize with mock data immediately
-    this.data = generateMockData();
+    generateMockData().then(data => {
+      this.data = data;
+    });
   }
 
-  // Start real-time updates (in a real app, this would use WebSockets or polling)
+  // Start real-time updates (using a mix of real API and simulated data)
   startRealTimeUpdates(interval = 30000) {
     if (updateInterval) {
       clearInterval(updateInterval);
@@ -189,12 +416,8 @@ class SentimentService {
   // Fetch latest data
   async fetchLatestData() {
     try {
-      // In a real application, this would be an API call
-      // For this demo, we'll simulate network delay and use mock data
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Generate new mock data
-      this.data = generateMockData();
+      // This integrates real API data where possible
+      this.data = await generateMockData();
       
       // Notify listeners
       this.notifyListeners();
