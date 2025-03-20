@@ -2,6 +2,9 @@
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import TopStocks from '@/components/dashboard/TopStocks';
+import AIAssistant from '@/components/dashboard/AIAssistant';
+import PriceCorrelation from '@/components/dashboard/PriceCorrelation';
+import ClusterAnalysis from '@/components/dashboard/ClusterAnalysis';
 import { sentimentService } from '@/services/sentimentService';
 import { useEffect, useState } from 'react';
 
@@ -36,8 +39,24 @@ const StockSentimentPage = () => {
       </div>
 
       {data && (
-        <TopStocks stocks={data.topStocks} loading={loading} />
+        <div className="space-y-8">
+          <TopStocks stocks={data.topStocks} loading={loading} />
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <PriceCorrelation 
+              stocks={data.priceCorrelation.stocks}
+              loading={loading}
+            />
+          </div>
+          
+          <ClusterAnalysis
+            stocks={data.clusterAnalysis.stocks}
+            loading={loading}
+          />
+        </div>
       )}
+      
+      <AIAssistant />
     </DashboardLayout>
   );
 };

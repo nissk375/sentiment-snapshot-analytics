@@ -2,6 +2,7 @@
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import NewsImpact from '@/components/dashboard/NewsImpact';
+import AIAssistant from '@/components/dashboard/AIAssistant';
 import { sentimentService } from '@/services/sentimentService';
 import { useEffect, useState } from 'react';
 
@@ -38,6 +39,8 @@ const NewsImpactPage = () => {
       {data && (
         <NewsImpact news={data.recentNews} loading={loading} />
       )}
+      
+      <AIAssistant />
     </DashboardLayout>
   );
 };

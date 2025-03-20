@@ -1,13 +1,40 @@
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  ResponsiveContainer,
+  TooltipProps
+} from 'recharts';
 import { sentimentService } from '@/services/sentimentService';
-import { useEffect, useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { getSentimentColor } from '@/utils/formatters';
+import { formatDate } from '@/utils/formatters';
+import SentimentPrediction from '@/components/dashboard/SentimentPrediction';
+import { CalendarDays, TrendingUp } from 'lucide-react';
+
+// Type for tooltip props to fix the ValueType issues
+interface CustomTooltipProps extends TooltipProps<number, string> {
+  active?: boolean;
+  payload?: Array<{
+    value: number;
+    payload: {
+      date: string;
+      value: number;
+      predicted?: number;
+    };
+  }>;
+  label?: string;
+}
 
 const PredictionsPage = () => {
-  const [data, setData] = useState(null);
+  const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -30,185 +57,157 @@ const PredictionsPage = () => {
     };
   }, []);
 
-  // Generate some predictive data based on sentiment trends
-  const generatePredictiveData = () => {
-    if (!data?.sentimentTrend) return [];
+  // Custom tooltip component with proper typing
+  const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-background border border-border p-3 rounded-md shadow-md">
+          <p className="font-medium">{label}</p>
+          {payload.map((entry, index) => (
+            <p key={index} className="text-sm">
+              {entry.payload.predicted !== undefined ? 'Predicted: ' : 'Value: '}
+              {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  // Generate some sample prediction data
+  const generatePredictionData = () => {
+    const today = new Date();
+    const result = [];
     
-    const trend = [...data.sentimentTrend];
-    const lastPoint = trend[trend.length - 1];
-    const direction = trend[trend.length - 1].sentiment > trend[trend.length - 2].sentiment ? 1 : -1;
-    
-    // Generate future predictions with some randomness
-    const predictions = [];
-    let lastTimestamp = new Date(lastPoint.timestamp);
-    let lastSentiment = lastPoint.sentiment;
-    let lastIndexValue = lastPoint.indexValue;
-    
-    for (let i = 1; i <= 5; i++) {
-      lastTimestamp = new Date(lastTimestamp);
-      lastTimestamp.setHours(lastTimestamp.getHours() + 1);
-      
-      // Add some randomness but keep the general trend
-      const sentimentChange = (Math.random() * 0.2 - 0.1) + (direction * 0.05);
-      lastSentiment = Math.max(-1, Math.min(1, lastSentiment + sentimentChange));
-      
-      // Index value follows sentiment with some randomness
-      const indexChange = lastSentiment > 0 ? 
-        Math.random() * 100 + 20 : 
-        Math.random() * -100 - 20;
-      lastIndexValue = lastIndexValue + indexChange;
-      
-      predictions.push({
-        timestamp: lastTimestamp.toISOString(),
-        sentiment: lastSentiment,
-        indexValue: lastIndexValue,
-        isPrediction: true
+    // Historical data (last 10 days)
+    for (let i = 0; i < 10; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - (10 - i));
+      result.push({
+        date: formatDate(date.toISOString(), 'short'),
+        value: Math.random() * 100 + 100,
       });
     }
     
-    return [...trend, ...predictions];
+    // Prediction data (next 5 days)
+    const lastValue = result[result.length - 1].value;
+    for (let i = 1; i <= 5; i++) {
+      const date = new Date(today);
+      date.setDate(date.getDate() + i);
+      const predictedValue = lastValue * (1 + (Math.random() * 0.1 - 0.05));
+      result.push({
+        date: formatDate(date.toISOString(), 'short'),
+        predicted: predictedValue,
+      });
+    }
+    
+    return result;
   };
-
-  const predictiveData = data ? generatePredictiveData() : [];
+  
+  const predictionData = generatePredictionData();
 
   return (
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-semibold tracking-tight">Market Predictions</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">Predictions</h1>
       </div>
 
-      {loading ? (
-        <Card className="mt-6 glassmorphism">
-          <CardHeader>
-            <CardTitle className="text-xl font-medium">Loading predictions...</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[400px] flex items-center justify-center">
-            <div className="w-full h-full bg-gray-100 dark:bg-gray-800 animate-pulse rounded-md" />
-          </CardContent>
-        </Card>
-      ) : (
-        <Card className="mt-6 glassmorphism">
-          <CardHeader>
-            <CardTitle className="text-xl font-medium">Market Prediction (Next 5 Hours)</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[400px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={predictiveData}
-                margin={{ top: 10, right: 30, left: 0, bottom: 20 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} />
-                <XAxis 
-                  dataKey="timestamp" 
-                  tickFormatter={(value) => {
-                    const date = new Date(value);
-                    return `${date.getHours()}:${date.getMinutes().toString().padStart(2, '0')}`;
-                  }}
-                  tick={{ fontSize: 12 }}
-                  tickMargin={10}
-                />
-                <YAxis 
-                  yAxisId="left"
-                  orientation="left"
-                  domain={[-1, 1]}
-                  tickCount={5}
-                  tickFormatter={(value) => value.toFixed(1)}
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis 
-                  yAxisId="right"
-                  orientation="right"
-                  domain={['dataMin - 100', 'dataMax + 100']}
-                  tickCount={5}
-                  tickFormatter={(value) => value.toFixed(0)}
-                  tick={{ fontSize: 12 }}
-                />
-                <Tooltip 
-                  labelFormatter={(value) => {
-                    const date = new Date(value);
-                    return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
-                  }}
-                  formatter={(value, name) => {
-                    if (name === 'sentiment') {
-                      return [value.toFixed(2), 'Sentiment'];
-                    }
-                    return [value.toFixed(0), 'Index Value'];
-                  }}
-                />
-                <Legend />
-                <Line
-                  yAxisId="left"
-                  type="monotone"
-                  dataKey="sentiment"
-                  stroke="#4ade80"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-                <Line
-                  yAxisId="right"
-                  type="monotone"
-                  dataKey="indexValue"
-                  stroke="#60a5fa"
-                  strokeWidth={2}
-                  dot={{ r: 4 }}
-                  activeDot={{ r: 6 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        <Card className="glassmorphism">
-          <CardHeader>
-            <CardTitle className="text-lg">Sentiment Prediction</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-3xl font-bold" style={{ color: data ? getSentimentColor(data.overallSentiment) : 'inherit' }}>
-                {data ? (data.overallSentiment > 0.2 ? 'Bullish' : data.overallSentiment < -0.2 ? 'Bearish' : 'Neutral') : 'Loading...'}
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Predicted market sentiment for the next 24 hours
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="sentiment">
+        <TabsList>
+          <TabsTrigger value="sentiment">Sentiment Forecast</TabsTrigger>
+          <TabsTrigger value="price">Price Forecast</TabsTrigger>
+          <TabsTrigger value="volatility">Volatility Forecast</TabsTrigger>
+        </TabsList>
         
-        <Card className="glassmorphism">
-          <CardHeader>
-            <CardTitle className="text-lg">Price Target</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-3xl font-bold">
-                {data ? (data.currentValue + (data.currentValue * data.overallSentiment * 0.05)).toFixed(2) : 'Loading...'}
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Predicted price target in 24 hours
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+        <TabsContent value="sentiment" className="mt-4">
+          {data && (
+            <SentimentPrediction 
+              historicalData={data.sentimentPrediction.historicalData}
+              predictions={data.sentimentPrediction.predictions}
+              confidenceLevel={data.sentimentPrediction.confidenceLevel}
+              loading={loading}
+            />
+          )}
+        </TabsContent>
         
-        <Card className="glassmorphism">
-          <CardHeader>
-            <CardTitle className="text-lg">Volatility Forecast</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center">
-              <p className="text-3xl font-bold">
-                {data ? (data.volatilityIndex + (Math.random() * 5 - 2.5)).toFixed(2) : 'Loading...'}
-              </p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Predicted market volatility for tomorrow
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="price" className="mt-4">
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-start">
+                <div>
+                  <CardTitle>Price Prediction</CardTitle>
+                  <CardDescription className="flex items-center gap-1">
+                    <CalendarDays className="h-4 w-4" /> 5-Day Market Index Forecast
+                  </CardDescription>
+                </div>
+                <div className="flex items-center space-x-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 py-1 px-2 rounded-md text-sm">
+                  <TrendingUp className="h-4 w-4" />
+                  <span>+2.8%</span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <Skeleton className="w-full h-[350px]" />
+              ) : (
+                <div className="w-full h-[350px]">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart
+                      data={predictionData}
+                      margin={{
+                        top: 10,
+                        right: 30,
+                        left: 0,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" strokeOpacity={0.4} />
+                      <XAxis dataKey="date" />
+                      <YAxis domain={['dataMin - 10', 'dataMax + 10']} />
+                      <Tooltip content={<CustomTooltip />} />
+                      <Line
+                        type="monotone"
+                        dataKey="value"
+                        stroke="var(--color-primary)"
+                        strokeWidth={2}
+                        dot={{ r: 4 }}
+                        activeDot={{ r: 6 }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="predicted"
+                        stroke="#22c55e"
+                        strokeWidth={2}
+                        strokeDasharray="5 5"
+                        dot={{ fill: "#22c55e", r: 4 }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="volatility" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Volatility Forecast</CardTitle>
+              <CardDescription>Predicted market volatility over the next 5 days</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <Skeleton className="w-full h-[350px]" />
+              ) : (
+                <div className="text-center p-8">
+                  <p className="text-muted-foreground">Volatility forecast data will be available soon.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </DashboardLayout>
   );
 };

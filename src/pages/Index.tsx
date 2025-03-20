@@ -10,6 +10,10 @@ import NewsletterForm from '@/components/dashboard/NewsletterForm';
 import MarketBreadth from '@/components/dashboard/MarketBreadth';
 import TechnicalIndicators from '@/components/dashboard/TechnicalIndicators';
 import GlobalMarkets from '@/components/dashboard/GlobalMarkets';
+import PriceCorrelation from '@/components/dashboard/PriceCorrelation';
+import SentimentPrediction from '@/components/dashboard/SentimentPrediction';
+import ClusterAnalysis from '@/components/dashboard/ClusterAnalysis';
+import AIAssistant from '@/components/dashboard/AIAssistant';
 import { sentimentService, SentimentData } from '@/services/sentimentService';
 import { formatDate } from '@/utils/formatters';
 
@@ -85,6 +89,26 @@ const Index = () => {
         </div>
       </div>
       
+      {/* Prediction Analysis */}
+      <div className="mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {data && (
+            <>
+              <SentimentPrediction 
+                historicalData={data.sentimentPrediction.historicalData}
+                predictions={data.sentimentPrediction.predictions}
+                confidenceLevel={data.sentimentPrediction.confidenceLevel}
+                loading={loading}
+              />
+              <PriceCorrelation 
+                stocks={data.priceCorrelation.stocks}
+                loading={loading}
+              />
+            </>
+          )}
+        </div>
+      </div>
+      
       {/* Technical Analysis Section */}
       <div className="mt-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -99,6 +123,16 @@ const Index = () => {
             </>
           )}
         </div>
+      </div>
+      
+      {/* Cluster Analysis */}
+      <div className="mt-8">
+        {data && (
+          <ClusterAnalysis
+            stocks={data.clusterAnalysis.stocks}
+            loading={loading}
+          />
+        )}
       </div>
       
       {/* Global Markets Section */}
@@ -124,6 +158,9 @@ const Index = () => {
           </div>
         </div>
       </div>
+      
+      {/* AI Assistant (floats on all pages) */}
+      <AIAssistant />
     </DashboardLayout>
   );
 };

@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 
 // Types for our sentiment data
@@ -18,6 +17,44 @@ export interface SentimentData {
   marketBreadth: MarketBreadth;
   technicalIndicators: TechnicalIndicators;
   globalMarkets: GlobalMarket[];
+  
+  // New fields for advanced analysis
+  priceCorrelation: {
+    stocks: {
+      symbol: string;
+      name: string;
+      price: number;
+      percentChange: number;
+      marketCap: number;
+      correlationIndex: number;
+    }[];
+  };
+  sentimentPrediction: {
+    historicalData: {
+      date: string;
+      actual: number;
+      predicted?: number;
+      lower?: number;
+      upper?: number;
+    }[];
+    predictions: {
+      date: string;
+      predicted: number;
+      lower: number;
+      upper: number;
+    }[];
+    confidenceLevel: number;
+  };
+  clusterAnalysis: {
+    stocks: {
+      symbol: string;
+      name: string;
+      volatility: number;
+      momentum: number;
+      marketCap: number;
+      cluster: 'highGrowth' | 'value' | 'cyclical' | 'defensive';
+    }[];
+  };
 }
 
 export interface SectorSentiment {
@@ -212,6 +249,33 @@ const generateMockData = async (): Promise<SentimentData> => {
     { name: "China", index: "Shanghai", value: parseFloat((3300 + Math.random() * 300).toFixed(2)), percentChange: parseFloat((Math.random() * 4 - 2).toFixed(2)) }
   ];
 
+  // Generate price correlation data
+  const priceCorrelation = {
+    stocks: topStocks.map(stock => ({
+      symbol: stock.symbol,
+      name: stock.name,
+      price: stock.price,
+      percentChange: stock.percentChange,
+      marketCap: Math.floor(Math.random() * 500000000000) + 10000000000,
+      correlationIndex: parseFloat((Math.random() * 2 - 1).toFixed(2))
+    }))
+  };
+
+  // Generate sentiment prediction data
+  const sentimentPrediction = generateSentimentPredictionData(overallSentiment, now);
+  
+  // Generate cluster analysis data
+  const clusterAnalysis = {
+    stocks: topStocks.map(stock => ({
+      symbol: stock.symbol,
+      name: stock.name,
+      volatility: parseFloat((Math.random() * 1.5).toFixed(2)),
+      momentum: parseFloat((Math.random() * 2 - 1).toFixed(2)),
+      marketCap: Math.floor(Math.random() * 500000000000) + 10000000000,
+      cluster: ['highGrowth', 'value', 'cyclical', 'defensive'][Math.floor(Math.random() * 4)] as 'highGrowth' | 'value' | 'cyclical' | 'defensive'
+    }))
+  };
+
   return {
     timestamp: now.toISOString(),
     overallSentiment,
@@ -227,7 +291,10 @@ const generateMockData = async (): Promise<SentimentData> => {
     volatilityIndex: parseFloat((Math.random() * 10 + 15).toFixed(2)),
     marketBreadth,
     technicalIndicators,
-    globalMarkets
+    globalMarkets,
+    priceCorrelation,
+    sentimentPrediction,
+    clusterAnalysis
   };
 };
 
@@ -366,6 +433,53 @@ const generateNewsData = (now: Date): NewsItem[] => {
     sentiment: parseFloat((Math.random() * 2 - 1).toFixed(2)),
     impactScore: parseFloat((Math.random()).toFixed(2))
   }));
+};
+
+// Helper function to generate sentiment prediction data
+const generateSentimentPredictionData = (currentSentiment: number, now: Date) => {
+  // Generate 14 days of historical data (past 2 weeks)
+  const historicalData = Array.from({ length: 14 }, (_, i) => {
+    const date = new Date(now);
+    date.setDate(date.getDate() - (14 - i));
+    
+    // Create a somewhat realistic pattern with some randomness
+    const basePattern = Math.sin((i / 14) * Math.PI) * 0.3;
+    const randomNoise = (Math.random() * 0.4 - 0.2); 
+    const actual = Math.min(Math.max(basePattern + randomNoise, -1), 1);
+    
+    return {
+      date: date.toISOString().split('T')[0],
+      actual,
+      // Only add predictions for the last few days
+      predicted: i >= 10 ? parseFloat((actual * 0.9 + Math.random() * 0.2 - 0.1).toFixed(2)) : undefined,
+      lower: i >= 10 ? parseFloat((actual * 0.9 - 0.15).toFixed(2)) : undefined,
+      upper: i >= 10 ? parseFloat((actual * 0.9 + 0.15).toFixed(2)) : undefined
+    };
+  });
+  
+  // Generate 5 days of predictions (next week)
+  const predictions = Array.from({ length: 5 }, (_, i) => {
+    const date = new Date(now);
+    date.setDate(date.getDate() + (i + 1));
+    
+    // Base the prediction on the current sentiment with a trend and uncertainty
+    const trend = Math.random() > 0.5 ? 0.05 * (i + 1) : -0.05 * (i + 1);
+    const predicted = parseFloat(Math.min(Math.max(currentSentiment + trend, -1), 1).toFixed(2));
+    const uncertainty = 0.1 + (i * 0.02); // Uncertainty increases with time
+    
+    return {
+      date: date.toISOString().split('T')[0],
+      predicted,
+      lower: parseFloat(Math.max(predicted - uncertainty, -1).toFixed(2)),
+      upper: parseFloat(Math.min(predicted + uncertainty, 1).toFixed(2))
+    };
+  });
+  
+  return {
+    historicalData,
+    predictions,
+    confidenceLevel: 85 // Confidence level in percentage
+  };
 };
 
 // Interval reference for real-time updates

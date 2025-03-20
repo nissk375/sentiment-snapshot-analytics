@@ -2,6 +2,7 @@
 import React from 'react';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import SectorAnalysis from '@/components/dashboard/SectorAnalysis';
+import AIAssistant from '@/components/dashboard/AIAssistant';
 import { sentimentService } from '@/services/sentimentService';
 import { useEffect, useState } from 'react';
 
@@ -36,10 +37,12 @@ const SectorAnalysisPage = () => {
       </div>
 
       {data && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 gap-6">
           <SectorAnalysis sectors={data.sectors} loading={loading} />
         </div>
       )}
+      
+      <AIAssistant />
     </DashboardLayout>
   );
 };
