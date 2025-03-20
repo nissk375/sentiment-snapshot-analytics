@@ -95,8 +95,20 @@ const Index = () => {
           {data && (
             <>
               <SentimentPrediction 
-                historicalData={data.sentimentPrediction.historicalData}
-                predictions={data.sentimentPrediction.predictions}
+                historicalData={data.sentimentPrediction.historicalData.map(point => ({
+                  date: point.date,
+                  actual: point.actual,
+                  predicted: point.predicted || 0, // Ensure predicted is provided (not optional)
+                  lower: point.lower || 0,         // Provide defaults for optional properties
+                  upper: point.upper || 0
+                }))}
+                predictions={data.sentimentPrediction.predictions.map(point => ({
+                  date: point.date,
+                  actual: 0,                      // Provide default for missing actual 
+                  predicted: point.predicted,
+                  lower: point.lower,
+                  upper: point.upper
+                }))}
                 confidenceLevel={data.sentimentPrediction.confidenceLevel}
                 loading={loading}
               />

@@ -75,57 +75,62 @@ const PriceCorrelation: React.FC<PriceCorrelationProps> = ({ stocks, loading }) 
             <Skeleton className="w-full h-full" />
           </div>
         ) : (
-          <ChartContainer 
-            config={chartConfig} 
-            className="w-full aspect-[4/3]"
-          >
-            <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis 
-                type="number" 
-                dataKey="x"
-                name="Price Change" 
-                label={{ value: 'Price Change (%)', position: 'insideBottom', offset: -10 }}
-                domain={['dataMin - 1', 'dataMax + 1']}
-              />
-              <YAxis 
-                type="number" 
-                dataKey="y" 
-                name="Correlation" 
-                label={{ value: 'Correlation', angle: -90, position: 'insideLeft' }}
-                domain={[-1, 1]}
-              />
-              <Tooltip content={customTooltip} />
-              <Scatter 
-                name="Stocks" 
-                data={transformedData} 
-                fill="#8884d8"
-                shape={(props: any) => {
-                  const { cx, cy, fill } = props;
-                  return (
-                    <circle 
-                      cx={cx} 
-                      cy={cy} 
-                      r={8} 
-                      fill={props.payload.color} 
-                      stroke="white"
-                      strokeWidth={1}
-                    />
-                  );
-                }}
-              />
-            </ScatterChart>
-            <ChartLegend>
-              <ChartLegendContent
-                payload={[
-                  { value: "High Correlation", color: chartConfig.high.color },
-                  { value: "Medium Correlation", color: chartConfig.medium.color },
-                  { value: "Low Correlation", color: chartConfig.low.color },
-                  { value: "Negative Correlation", color: chartConfig.negative.color },
-                ]}
-              />
-            </ChartLegend>
-          </ChartContainer>
+          <div className="w-full aspect-[4/3]">
+            <ChartContainer 
+              config={chartConfig} 
+              className="w-full h-full"
+            >
+              {/* Wrap the ScatterChart in a fragment to make it a single element */}
+              <>
+                <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis 
+                    type="number" 
+                    dataKey="x"
+                    name="Price Change" 
+                    label={{ value: 'Price Change (%)', position: 'insideBottom', offset: -10 }}
+                    domain={['dataMin - 1', 'dataMax + 1']}
+                  />
+                  <YAxis 
+                    type="number" 
+                    dataKey="y" 
+                    name="Correlation" 
+                    label={{ value: 'Correlation', angle: -90, position: 'insideLeft' }}
+                    domain={[-1, 1]}
+                  />
+                  <Tooltip content={customTooltip} />
+                  <Scatter 
+                    name="Stocks" 
+                    data={transformedData} 
+                    fill="#8884d8"
+                    shape={(props: any) => {
+                      const { cx, cy, fill } = props;
+                      return (
+                        <circle 
+                          cx={cx} 
+                          cy={cy} 
+                          r={8} 
+                          fill={props.payload.color} 
+                          stroke="white"
+                          strokeWidth={1}
+                        />
+                      );
+                    }}
+                  />
+                </ScatterChart>
+                <ChartLegend>
+                  <ChartLegendContent
+                    payload={[
+                      { value: "High Correlation", color: chartConfig.high.color },
+                      { value: "Medium Correlation", color: chartConfig.medium.color },
+                      { value: "Low Correlation", color: chartConfig.low.color },
+                      { value: "Negative Correlation", color: chartConfig.negative.color },
+                    ]}
+                  />
+                </ChartLegend>
+              </>
+            </ChartContainer>
+          </div>
         )}
       </CardContent>
     </Card>
