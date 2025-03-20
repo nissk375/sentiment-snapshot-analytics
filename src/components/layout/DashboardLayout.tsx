@@ -4,6 +4,7 @@ import { sentimentService, SentimentData } from '@/services/sentimentService';
 import { AlertCircle, Bell, Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -13,6 +14,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const [data, setData] = useState<SentimentData | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   useEffect(() => {
     // Subscribe to sentiment data updates
@@ -43,6 +46,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
     }
     
     return 'bg-gradient-to-r from-blue-600/90 to-blue-500/90';
+  };
+
+  // Navigation items with their routes
+  const navItems = [
+    { name: 'Market Overview', path: '/' },
+    { name: 'Sector Analysis', path: '/sector-analysis' },
+    { name: 'Stock Sentiment', path: '/stock-sentiment' },
+    { name: 'News Impact', path: '/news-impact' },
+    { name: 'Predictions', path: '/predictions' },
+  ];
+
+  // Handle navigation item click
+  const handleNavClick = (path: string) => {
+    navigate(path);
+    if (isMobile) {
+      setMenuOpen(false);
+    }
   };
   
   return (
@@ -101,47 +121,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
             </div>
             
             <nav className="space-y-1 flex-1">
-              <a 
-                href="#" 
-                className="flex items-center space-x-2 px-3 py-2 rounded-md bg-primary/10 text-primary"
-              >
-                <span>Market Overview</span>
-              </a>
-              <a 
-                href="#" 
-                className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors"
-              >
-                <span>Sector Analysis</span>
-              </a>
-              <a 
-                href="#" 
-                className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors"
-              >
-                <span>Stock Sentiment</span>
-              </a>
-              <a 
-                href="#" 
-                className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors"
-              >
-                <span>News Impact</span>
-              </a>
-              <a 
-                href="#" 
-                className="flex items-center space-x-2 px-3 py-2 rounded-md hover:bg-secondary transition-colors"
-              >
-                <span>Predictions</span>
-              </a>
+              {navItems.map((item) => (
+                <button 
+                  key={item.name}
+                  onClick={() => handleNavClick(item.path)}
+                  className={cn(
+                    "w-full text-left flex items-center space-x-2 px-3 py-2 rounded-md transition-colors",
+                    location.pathname === item.path 
+                      ? "bg-primary/10 text-primary" 
+                      : "hover:bg-secondary"
+                  )}
+                >
+                  <span>{item.name}</span>
+                </button>
+              ))}
             </nav>
-            
-            <div className="mt-4 p-3 rounded-lg bg-orange-50 border border-orange-200 flex items-start space-x-2">
-              <AlertCircle className="text-orange-500 shrink-0 mt-0.5" size={18} />
-              <div>
-                <h4 className="font-medium text-orange-800">Demo Data</h4>
-                <p className="text-sm text-orange-700">
-                  This demo uses simulated market data for illustration.
-                </p>
-              </div>
-            </div>
           </div>
         </aside>
         
