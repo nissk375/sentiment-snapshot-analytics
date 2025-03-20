@@ -57,14 +57,15 @@ const SectorAnalysis: React.FC<SectorAnalysisProps> = ({ sectors, loading = fals
                     {formatPercent(sector.percentChange)}
                   </span>
                 </div>
-                <Progress 
-                  value={sentimentProgress} 
-                  className="h-2 transition-all duration-300 group-hover:h-3"
-                  indicatorClassName={`transition-all duration-300 ease-in-out`}
-                  style={{ 
-                    "--progress-background": `linear-gradient(90deg, ${sentimentColor}88, ${sentimentColor})` 
-                  } as React.CSSProperties}
-                />
+                <div className="relative w-full h-2 transition-all duration-300 group-hover:h-3">
+                  <Progress 
+                    value={sentimentProgress} 
+                    className="h-full transition-all duration-300"
+                    style={{ 
+                      "--progress-foreground": sentimentColor 
+                    } as React.CSSProperties}
+                  />
+                </div>
               </div>
             );
           })}
