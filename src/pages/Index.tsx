@@ -1,13 +1,94 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useEffect, useState } from 'react';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import SentimentOverview from '@/components/dashboard/SentimentOverview';
+import SentimentChart from '@/components/dashboard/SentimentChart';
+import SectorAnalysis from '@/components/dashboard/SectorAnalysis';
+import TopStocks from '@/components/dashboard/TopStocks';
+import NewsImpact from '@/components/dashboard/NewsImpact';
+import NewsletterForm from '@/components/dashboard/NewsletterForm';
+import { sentimentService, SentimentData } from '@/services/sentimentService';
+import { formatDate } from '@/utils/formatters';
 
 const Index = () => {
+  const [data, setData] = useState<SentimentData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Subscribe to sentiment data updates
+    const unsubscribe = sentimentService.subscribe(newData => {
+      setData(newData);
+      setLoading(false);
+    });
+    
+    // Start real-time updates
+    const stopUpdates = sentimentService.startRealTimeUpdates(60000); // Update every minute
+    
+    // Initial data fetch
+    const fetchInitialData = async () => {
+      await sentimentService.fetchLatestData();
+    };
+    
+    fetchInitialData();
+    
+    // Clean up on component unmount
+    return () => {
+      unsubscribe();
+      stopUpdates();
+    };
+  }, []);
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
+    <DashboardLayout>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-3xl font-semibold tracking-tight">Market Sentiment Dashboard</h1>
+          <p className="text-muted-foreground">
+            {data ? (
+              `Last updated: ${formatDate(data.timestamp)}`
+            ) : (
+              'Loading data...'
+            )}
+          </p>
+        </div>
       </div>
-    </div>
+      
+      {/* Overview Cards */}
+      <SentimentOverview data={data} loading={loading} />
+      
+      {/* Charts */}
+      <div className="mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            {data && (
+              <SentimentChart data={data.sentimentTrend} loading={loading} />
+            )}
+          </div>
+          <div>
+            {data && (
+              <SectorAnalysis sectors={data.sectors} loading={loading} />
+            )}
+          </div>
+        </div>
+      </div>
+      
+      {/* Stock and News */}
+      <div className="mt-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-6">
+            {data && (
+              <>
+                <TopStocks stocks={data.topStocks} loading={loading} />
+                <NewsImpact news={data.recentNews} loading={loading} />
+              </>
+            )}
+          </div>
+          <div>
+            <NewsletterForm />
+          </div>
+        </div>
+      </div>
+    </DashboardLayout>
   );
 };
 
