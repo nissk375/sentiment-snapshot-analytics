@@ -14,6 +14,7 @@ import PriceCorrelation from '@/components/dashboard/PriceCorrelation';
 import SentimentPrediction from '@/components/dashboard/SentimentPrediction';
 import ClusterAnalysis from '@/components/dashboard/ClusterAnalysis';
 import AIAssistant from '@/components/dashboard/AIAssistant';
+import GeoLocationMap from '@/components/dashboard/GeoLocationMap';
 import { sentimentService, SentimentData } from '@/services/sentimentService';
 import { formatDate } from '@/utils/formatters';
 
@@ -87,6 +88,11 @@ const Index = () => {
             )}
           </div>
         </div>
+      </div>
+      
+      {/* Geo Location Map */}
+      <div className="mt-8">
+        <GeoLocationMap loading={loading} />
       </div>
       
       {/* Prediction Analysis */}
