@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Bot, X, Send, Maximize2, Minimize2, HelpCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -307,23 +306,13 @@ const AIAssistant = () => {
   const renderDesktopChat = () => (
     <Popover open={isOpen} onOpenChange={setIsOpen}>
       <PopoverTrigger asChild>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                variant="default" 
-                size="icon" 
-                className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50"
-                onClick={() => setIsOpen(true)}
-              >
-                <Bot size={24} />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left">
-              <p>Ask me anything about the market data</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Button 
+          variant="default" 
+          size="icon" 
+          className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50"
+        >
+          <Bot size={24} />
+        </Button>
       </PopoverTrigger>
       <PopoverContent 
         className="w-80 md:w-96 p-0 rounded-xl shadow-xl border-border/50" 
@@ -440,7 +429,6 @@ const AIAssistant = () => {
           variant="default" 
           size="icon" 
           className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50"
-          onClick={() => setIsOpen(true)}
         >
           <Bot size={24} />
         </Button>
