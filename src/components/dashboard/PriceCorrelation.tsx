@@ -99,62 +99,65 @@ const PriceCorrelation: React.FC<PriceCorrelationProps> = ({ stocks, loading }) 
                 config={chartConfig} 
                 className="w-full h-full"
               >
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis 
-                      type="number" 
-                      dataKey="x"
-                      name="Price Change" 
-                      label={{ value: 'Price Change (%)', position: 'insideBottom', offset: -10 }}
-                      domain={['dataMin - 1', 'dataMax + 1']}
+                {/* Wrap the content in a React Fragment to ensure ChartContainer receives a single child */}
+                <React.Fragment>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis 
+                        type="number" 
+                        dataKey="x"
+                        name="Price Change" 
+                        label={{ value: 'Price Change (%)', position: 'insideBottom', offset: -10 }}
+                        domain={['dataMin - 1', 'dataMax + 1']}
+                      />
+                      <YAxis 
+                        type="number" 
+                        dataKey="y" 
+                        name="Correlation" 
+                        label={{ value: 'Correlation', angle: -90, position: 'insideLeft' }}
+                        domain={[-1, 1]}
+                      />
+                      <ZAxis 
+                        type="number" 
+                        dataKey="z" 
+                        range={[30, 300]} 
+                        name="Market Cap" 
+                      />
+                      <Tooltip content={customTooltip} />
+                      <ReferenceLine x={0} stroke="#666" strokeDasharray="3 3" />
+                      <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
+                      <Scatter 
+                        name="Stocks" 
+                        data={transformedData} 
+                        fill="#8884d8"
+                        shape={(props: any) => {
+                          const { cx, cy, fill } = props;
+                          return (
+                            <circle 
+                              cx={cx} 
+                              cy={cy} 
+                              r={8} 
+                              fill={props.payload.color} 
+                              stroke="white"
+                              strokeWidth={1}
+                            />
+                          );
+                        }}
+                      />
+                    </ScatterChart>
+                  </ResponsiveContainer>
+                  <ChartLegend>
+                    <ChartLegendContent
+                      payload={[
+                        { value: "High Correlation", color: chartConfig.high.color },
+                        { value: "Medium Correlation", color: chartConfig.medium.color },
+                        { value: "Low Correlation", color: chartConfig.low.color },
+                        { value: "Negative Correlation", color: chartConfig.negative.color },
+                      ]}
                     />
-                    <YAxis 
-                      type="number" 
-                      dataKey="y" 
-                      name="Correlation" 
-                      label={{ value: 'Correlation', angle: -90, position: 'insideLeft' }}
-                      domain={[-1, 1]}
-                    />
-                    <ZAxis 
-                      type="number" 
-                      dataKey="z" 
-                      range={[30, 300]} 
-                      name="Market Cap" 
-                    />
-                    <Tooltip content={customTooltip} />
-                    <ReferenceLine x={0} stroke="#666" strokeDasharray="3 3" />
-                    <ReferenceLine y={0} stroke="#666" strokeDasharray="3 3" />
-                    <Scatter 
-                      name="Stocks" 
-                      data={transformedData} 
-                      fill="#8884d8"
-                      shape={(props: any) => {
-                        const { cx, cy, fill } = props;
-                        return (
-                          <circle 
-                            cx={cx} 
-                            cy={cy} 
-                            r={8} 
-                            fill={props.payload.color} 
-                            stroke="white"
-                            strokeWidth={1}
-                          />
-                        );
-                      }}
-                    />
-                  </ScatterChart>
-                </ResponsiveContainer>
-                <ChartLegend>
-                  <ChartLegendContent
-                    payload={[
-                      { value: "High Correlation", color: chartConfig.high.color },
-                      { value: "Medium Correlation", color: chartConfig.medium.color },
-                      { value: "Low Correlation", color: chartConfig.low.color },
-                      { value: "Negative Correlation", color: chartConfig.negative.color },
-                    ]}
-                  />
-                </ChartLegend>
+                  </ChartLegend>
+                </React.Fragment>
               </ChartContainer>
             </div>
             
