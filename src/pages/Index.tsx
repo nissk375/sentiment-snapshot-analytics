@@ -49,7 +49,7 @@ const Index = () => {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">Market Sentiment Dashboard</h1>
+          <h1 className="text-3xl font-semibold tracking-tight">Equora.AI Dashboard</h1>
           <p className="text-muted-foreground">
             {data ? (
               `Last updated: ${formatDate(data.timestamp)}`
@@ -98,13 +98,13 @@ const Index = () => {
                 historicalData={data.sentimentPrediction.historicalData.map(point => ({
                   date: point.date,
                   actual: point.actual,
-                  predicted: point.predicted || 0, // Ensure predicted is provided (not optional)
-                  lower: point.lower || 0,         // Provide defaults for optional properties
+                  predicted: point.predicted || 0,
+                  lower: point.lower || 0,
                   upper: point.upper || 0
                 }))}
                 predictions={data.sentimentPrediction.predictions.map(point => ({
                   date: point.date,
-                  actual: 0,                      // Provide default for missing actual 
+                  actual: 0,
                   predicted: point.predicted,
                   lower: point.lower,
                   upper: point.upper

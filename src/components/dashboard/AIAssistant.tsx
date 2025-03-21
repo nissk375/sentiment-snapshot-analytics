@@ -22,7 +22,7 @@ const AIAssistant = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'initial',
-      content: 'Hello! I\'m your Market Sentiment AI assistant. I can help you understand market trends, analyze sentiment data, explain technical indicators, and answer any questions about the dashboard data. How can I assist you today?',
+      content: 'Hello! I\'m your Equora.AI assistant. I can help you understand market trends, analyze sentiment data, explain technical indicators, and answer any questions about the dashboard data. How can I assist you today?',
       sender: 'bot',
       timestamp: new Date(),
     },
@@ -314,6 +314,7 @@ const AIAssistant = () => {
                 variant="default" 
                 size="icon" 
                 className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50"
+                onClick={() => setIsOpen(true)}
               >
                 <Bot size={24} />
               </Button>
@@ -335,7 +336,7 @@ const AIAssistant = () => {
           <div className="flex items-center justify-between p-3 border-b bg-primary text-primary-foreground rounded-t-xl">
             <div className="flex items-center gap-2">
               <Bot size={18} />
-              <span className="font-medium">Market AI Assistant</span>
+              <span className="font-medium">Equora.AI Assistant</span>
             </div>
             <div className="flex items-center gap-1">
               <Button 
@@ -439,6 +440,7 @@ const AIAssistant = () => {
           variant="default" 
           size="icon" 
           className="fixed bottom-6 right-6 h-14 w-14 rounded-full shadow-lg bg-primary hover:bg-primary/90 z-50"
+          onClick={() => setIsOpen(true)}
         >
           <Bot size={24} />
         </Button>
@@ -449,7 +451,7 @@ const AIAssistant = () => {
           <div className="flex items-center justify-between p-4 border-b bg-primary text-primary-foreground">
             <div className="flex items-center gap-2">
               <Bot size={20} />
-              <span className="font-medium">Market AI Assistant</span>
+              <span className="font-medium">Equora.AI Assistant</span>
             </div>
             <DrawerClose asChild>
               <Button 
