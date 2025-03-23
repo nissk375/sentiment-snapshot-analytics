@@ -15,6 +15,7 @@ import SentimentPrediction from '@/components/dashboard/SentimentPrediction';
 import ClusterAnalysis from '@/components/dashboard/ClusterAnalysis';
 import AIAssistant from '@/components/dashboard/AIAssistant';
 import GeoLocationMap from '@/components/dashboard/GeoLocationMap';
+import MarketOverview1 from '@/components/dashboard/MarketOverview1';
 import { sentimentService, SentimentData } from '@/services/sentimentService';
 import { formatDate } from '@/utils/formatters';
 
@@ -69,6 +70,11 @@ const Index = () => {
             </div>
           </div>
         )}
+      </div>
+      
+      {/* Real-time Market Data Section */}
+      <div className="mt-8">
+        <MarketOverview1 />
       </div>
       
       {/* Overview Cards */}
